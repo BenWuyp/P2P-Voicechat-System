@@ -11,3 +11,5 @@ different buttons that record play pause stop fast forward and backward volume s
 <img width="181" alt="image" src="https://github.com/EHChan52/P2P-Voicechat-System/assets/126001690/a2839bf8-59bc-44e7-bc95-ee126d946840">
 a time show how long has recorded
 buttons to start and stop the recording
+
+Phase 2
