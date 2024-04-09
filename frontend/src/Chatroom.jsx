@@ -32,7 +32,7 @@ const Chatroom = ({ username, chatroomID, chatroomName, onQuit }) => {
             <p>
               <button onClick={handleMute} className='border border-white border-3 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700'>{isMuted ? '🔇' : '🔊'}</button>
               <button onClick={handleRecord} className='border border-white border-3 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700'>{isRecording ? '⏹️' : '⏺'}</button>
-              <h3>Recorded Time: 1 <br></br>Recorder: </h3>
+              <h3>{isRecording ? 'Recording in Progress' : ' '}<br></br>{isRecording ? 'Recorded Time: mm:ss':' '}</h3>
             </p>
             <hr></hr>
             <p>
