@@ -16,10 +16,6 @@ const Dashboard = ({ username, onLogout, onJoin}) => {
     setShowPeople(true);
     setShowInfo(false);
   };
-  const handleInfoClick = () => {
-    setShowInfo(true);
-    setShowPeople(false);
-  };
   const handleJoinClick = (person) => {
     setChatroomID(person.number);
     onJoin(person);
@@ -40,9 +36,6 @@ const Dashboard = ({ username, onLogout, onJoin}) => {
         <nav>
           <a onClick={handleChatroomsClick} className="block py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700 hover:text-white">
             Chatrooms
-          </a>
-          <a onClick={handleInfoClick} className="block py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700 hover:text-white">
-            Info 
           </a>
           <a onClick={handleLogout} className="block py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700 hover:text-white">
             Logout
@@ -95,9 +88,6 @@ const Dashboard = ({ username, onLogout, onJoin}) => {
             </li>
         </ul>
       ))}
-      {showInfo && (
-        <h1>User Guide</h1>
-      )}
     </main>
       </div>
     </div>
