@@ -5,7 +5,7 @@ import Login from "./Login";
 import Dashboard from "./Dashboard";
 import Chatroom from "./Chatroom";
 
-const WS_URL = "ws://127.0.0.1:8765";
+const WS_URL = "ws://125.59.219.35:8765";
 
 function App() {
   const { sendMessage, lastMessage, readyState } = useWebSocket(WS_URL, {

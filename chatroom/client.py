@@ -4,7 +4,7 @@ import json
 
 
 async def client():
-    async with websockets.connect('ws://localhost:8765') as websocket:
+    async with websockets.connect('ws://125.59.219.35:8765') as websocket:
         client_id = input("Enter your ID: ")
         await websocket.send(client_id)
         while True:
