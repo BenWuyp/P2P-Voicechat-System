@@ -7,6 +7,7 @@ const Chatroom = ({
   chatroomName,
   onQuit,
   sendMessage,
+  lastMessage,
 }) => {
   const [isMuted, setIsMuted] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -14,6 +15,8 @@ const Chatroom = ({
   const [enableCam, setEnableCam] = useState(false);
   const [enableVoiceChange, setEnableVoiceChange] = useState(false);
   const [recordedTime, setRecordedTime] = useState("00:00");
+  const [recordingList, setRecordingList] = useState([]);
+  const [selectedRecording, setSelectedRecording] = useState("");
 
   useEffect(() => {
     let intervalId;
@@ -36,6 +39,12 @@ const Chatroom = ({
     };
   }, [isRecording]);
 
+  useEffect(() => {
+    if (lastMessage?.data && Object.keys(lastMessage?.data).length > 0) {
+      setRecordingList(JSON.parse(lastMessage.data));
+    }
+  }, [lastMessage]);
+
   const handleMute = () => {
     setIsMuted((prevMuteStatus) => {
       const newMuteStatus = !prevMuteStatus;
@@ -53,6 +62,9 @@ const Chatroom = ({
         JSON.stringify({ action: "start_record", payload: undefined })
       );
     }
+    sendMessage(
+      JSON.stringify({ action: "fetch_recordings", payload: undefined })
+    );
     setIsRecording(!isRecording);
   };
 
@@ -62,6 +74,15 @@ const Chatroom = ({
 
   const handleVoiceChange = () => {
     setEnableVoiceChange(!enableVoiceChange);
+  };
+
+  const handleRecordingSelect = (event) => {
+    setSelectedRecording(event.target.value);
+  };
+
+  const handlePlayRecording = () => {
+    // Implement logic to play the selected recording
+    console.log("Playing recording:", selectedRecording);
   };
   return (
     <div className="flex flex-col min-h-screen">
@@ -98,6 +119,30 @@ const Chatroom = ({
             <br></br>
             {isRecording ? `Recorded Time: ${recordedTime}` : " "}
           </h3>
+          <form>
+            <label htmlFor="recording">Select a Recording:</label>
+            <select
+              id="recording"
+              name="recording"
+              value={selectedRecording}
+              onChange={handleRecordingSelect}
+              style={{ marginTop: "10px", marginBottom: "10px" }}
+            >
+              <option value="">Choose a recording</option>
+              {recordingList.map((recording, index) => (
+                <option key={index} value={recording}>
+                  {recording}
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={handlePlayRecording}
+              className="border border-white border-3 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700"
+              disabled={!selectedRecording}
+            >
+              Play
+            </button>
+          </form>
         </p>
         <hr></hr>
         <button

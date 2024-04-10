@@ -5,6 +5,7 @@ import pyaudio
 import wave
 import datetime
 import threading
+import glob
 
 chatrooms = {}
 ws = {}
@@ -49,6 +50,11 @@ def stop_recording(client_id):
     print(f"Recording stopped for {client_id}")
 
 
+def fetch_recordings():
+    wav_files = glob.glob("*.wav")
+    return wav_files
+
+
 async def handle_client(websocket):
     client_id = await websocket.recv()
     ws[client_id] = websocket
@@ -84,6 +90,8 @@ async def handle_client(websocket):
                                  args=(client_id,)).start()
             elif data['action'] == 'end_record':
                 stop_recording(client_id)
+            elif data['action'] == 'fetch_recordings':
+                await websocket.send(json.dumps(fetch_recordings()))
     finally:
         del ws[client_id]
         del mute_status[client_id]

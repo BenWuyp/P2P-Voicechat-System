@@ -64,6 +64,7 @@ function App() {
             chatroomName={chatroom.name}
             onQuit={handleQuitChat}
             sendMessage={sendMessage}
+            lastMessage={lastMessage}
           />
         ) : (
           <Dashboard
