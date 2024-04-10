@@ -1,54 +1,52 @@
 import asyncio
 import websockets
+import json
 
-connected_clients = set()
 chatrooms = {}
-
-
-async def notify_clients(chatroom):
-    if chatroom in chatrooms:
-        message = ",".join(chatrooms[chatroom])
-        await asyncio.gather(*[client.send(message) for client in chatrooms[chatroom]])
+ws = {}
 
 
 async def handle_client(websocket):
-    connected_clients.add(websocket)
     client_id = await websocket.recv()
+    ws[client_id] = websocket
     try:
         while True:
-            message = await websocket.recv()
-            action, payload = message.split(":")
-            if action == 'create':
-                chatroom = payload
-                chatrooms[chatroom] = [(websocket, client_id)]
-            elif action == 'join':
-                chatroom = payload
+            data = await websocket.recv()
+            data = json.loads(data)
+            if data['action'] == 'create':
+                chatroom = data['payload']
+                chatrooms[chatroom] = {
+                    'createdBy': client_id, 'members': [client_id]}
+            elif data['action'] == 'join':
+                chatroom = data['payload']
                 if chatroom in chatrooms:
-                    chatrooms[chatroom].append((websocket, client_id))
+                    chatrooms[chatroom]['members'].append(client_id)
                 else:
                     await websocket.send("Chatroom does not exist.")
-            elif action == 'message':
-                chatroom = payload.split(":")[0]
-                if chatroom in chatrooms:
-                    await notify_clients(chatroom)
-                else:
-                    await websocket.send("Chatroom does not exist.")
-            elif action == 'list':
-                chatroom_list = []
-                for chatroom, lst in chatrooms.items():
-                    chatroom_str = chatroom + ':'
-                    for ws, id in lst:
-                        chatroom_str += id + '+'
-                    chatroom_list.append(chatroom_str)
-                await websocket.send(",".join(chatroom_list))
-            elif action == 'exit':
+            elif data['action'] == 'list':
+                lst = json.dumps(chatrooms)
+                await websocket.send(lst)
+            elif data['action'] == 'quit':
+                chatroom = data['payload']
+                lst = chatrooms[chatroom]['members']
+                lst.remove(client_id)
+                if (not lst):
+                    del chatrooms[chatroom]
+            elif data['action'] == 'exit':
                 break
     finally:
-        connected_clients.remove(websocket)
-        for chatroom in chatrooms.values():
-            for ws, id in chatroom:
-                if (websocket == ws):
-                    chatroom.remove((websocket, id))
+        del ws[client_id]
+        empty_room = None
+        for chatroom, obj in chatrooms.items():
+            lst = obj['members']
+            for id in lst:
+                if (id == client_id):
+                    lst.remove(id)
+                    break
+            if (not lst):
+                empty_room = chatroom
+        if (empty_room):
+            del chatrooms[empty_room]
 
 start_server = websockets.serve(handle_client, 'localhost', 8765)
 

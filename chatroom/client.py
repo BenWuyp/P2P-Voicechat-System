@@ -1,5 +1,6 @@
 import asyncio
 import websockets
+import json
 
 
 async def client():
@@ -8,15 +9,17 @@ async def client():
         await websocket.send(client_id)
         while True:
             action = input(
-                "Choose an action ([1] Create chatroom, [2] Join chatroom, [3] Send message, [4] Get chatroom list, [5] exit): ")
+                "Choose an action ([1] Create chatroom, [2] Join chatroom, [3] Send message, [4] Get chatroom list, [5] quit chatroom, [6] exit): ")
             if action == '1':
                 chatroom = input("Enter chatroom name: ")
-                message = f"create:{chatroom}"
-                await websocket.send(message)
+                data = {'action': 'create', 'payload': chatroom}
+                json_str = json.dumps(data)
+                await websocket.send(json_str)
             elif action == '2':
                 chatroom = input("Enter chatroom name: ")
-                message = f"join:{chatroom}"
-                await websocket.send(message)
+                data = {'action': 'join', 'payload': chatroom}
+                json_str = json.dumps(data)
+                await websocket.send(json_str)
             elif action == '3':
                 chatroom = input("Enter chatroom name: ")
                 message = input("Enter your message: ")
@@ -24,13 +27,21 @@ async def client():
                 await websocket.send(message)
             elif action == '4':
                 message = "list:"
-                await websocket.send(message)
+                data = {'action': 'list'}
+                json_str = json.dumps(data)
+                await websocket.send(json_str)
                 response = await websocket.recv()
-                chatroom_list = response.split(",")
-                print("Available Chatrooms:", chatroom_list)
+                chatrooms = json.loads(response)
+                print("Available Chatrooms:", chatrooms)
             elif action == '5':
-                message = "exit:"
-                await websocket.send(message)
+                chatroom = input("Enter chatroom name: ")
+                data = {'action': 'quit', 'payload': chatroom}
+                json_str = json.dumps(data)
+                await websocket.send(json_str)
+            elif action == '6':
+                data = {'action': 'exit'}
+                json_str = json.dumps(data)
+                await websocket.send(json_str)
                 break
             else:
                 print("Invalid action. Please choose again.")
