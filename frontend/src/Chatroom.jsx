@@ -40,7 +40,7 @@ const Chatroom = ({
   }, [isRecording]);
 
   useEffect(() => {
-    if (lastMessage?.data && Object.keys(lastMessage?.data).length > 0) {
+    if (lastMessage.data[0] !== "{") {
       setRecordingList(JSON.parse(lastMessage.data));
     }
   }, [lastMessage]);
@@ -120,13 +120,17 @@ const Chatroom = ({
             {isRecording ? `Recorded Time: ${recordedTime}` : " "}
           </h3>
           <form>
-            <label htmlFor="recording">Select a Recording:</label>
+            <label>Select a Recording:</label>
             <select
               id="recording"
               name="recording"
               value={selectedRecording}
               onChange={handleRecordingSelect}
-              style={{ marginTop: "10px", marginBottom: "10px" }}
+              style={{
+                marginTop: "10px",
+                marginBottom: "10px",
+                width: "300px",
+              }}
             >
               <option value="">Choose a recording</option>
               {recordingList.map((recording, index) => (
@@ -135,14 +139,14 @@ const Chatroom = ({
                 </option>
               ))}
             </select>
-            <button
-              onClick={handlePlayRecording}
-              className="border border-white border-3 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700"
-              disabled={!selectedRecording}
-            >
-              Play
-            </button>
           </form>
+          <button
+            onClick={handlePlayRecording}
+            className="border border-white border-3 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700"
+            disabled={!selectedRecording}
+          >
+            Play
+          </button>
         </p>
         <hr></hr>
         <button
