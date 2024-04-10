@@ -8,8 +8,9 @@ const Chatroom = ({ username, chatroomID, chatroomName, onQuit }) => {
   const [enableCam, setEnableCam] = useState(false);
   const [enableVoiceChange, setEnableVoiceChange] = useState(false);
   const [ws, setWs] = useState(null);
-
+  
   useEffect(() => {
+
     const socket = new WebSocket("ws://localhost:8765/");
     socket.onopen = () => {
       console.log("WebSocket connection is open.");
@@ -48,14 +49,14 @@ const Chatroom = ({ username, chatroomID, chatroomName, onQuit }) => {
           KK Voice Chat
         </h1>
         <hr></hr>
-        <h2 className="text-xl mb-4">{chatroomName}'s Chatroom</h2>
+        <h2 className="text-xl mb-4">Chatroom: {chatroomName}</h2>
         <h2 className="text-xl mb-4">Chatroom Id: {chatroomID}</h2>
         <h2 className="text-xl mb-4">No. Participants</h2>
         <hr></hr>
         <ul>
-          <li className="mb-2">Participant Name 1</li>
-          <li className="mb-2">Participant Name 2</li>
-          <li className="mb-2">Participant Name 99</li>
+          <li className="mb-2">participant 1</li>
+          <li className="mb-2">participant 2</li>
+          <li className="mb-2">participant 3</li>
         </ul>
         <hr></hr>
         <p>

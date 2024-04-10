@@ -1,9 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import useWebSocket, { ReadyState } from "react-use-websocket";
+
 import Login from './Login';
 import Dashboard from './Dashboard';
 import Chatroom from './Chatroom'; 
 
+const WS_URL = "ws://127.0.0.1:8765";
+
 function App() {
+
+  const { sendMessage, lastMessage, readyState } = useWebSocket(WS_URL, {
+    onOpen: () => {
+      console.log("WebSocket connection established.");
+    },
+  });
+
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [username, setUsername] = useState('');
   const [isJoinedIn, setIsJoinedIn] = useState(false);
@@ -14,6 +25,7 @@ function App() {
     setUsername(username);
     setIsJoinedIn(false);
     setChatroom(null);
+    sendMessage(username)
   };
 
   const handleLogout = () => {
@@ -32,6 +44,10 @@ function App() {
   const handleQuitChat = () => {
     setIsJoinedIn(false);
     setIsLoggedIn(true);
+
+    const jsonStr = JSON.stringify({'action' : 'quit', 'payload' : `${chatroom.name}`})
+    sendMessage(jsonStr)
+
     setChatroom(null);
     setRecorderName("None");
   };
@@ -40,9 +56,9 @@ function App() {
     <div className="App">
       {isLoggedIn ? (
         isJoinedIn ? (
-          <Chatroom username={username} chatroomID={chatroom.number} chatroomName={chatroom.name} onQuit={handleQuitChat} />
+          <Chatroom username={username} chatroomID={chatroom.number} chatroomName={chatroom.name} onQuit={handleQuitChat}/>
         ) : (
-          <Dashboard username={username} onLogout={handleLogout} onJoin={handleJoin} />
+          <Dashboard username={username} onLogout={handleLogout} onJoin={handleJoin} sendMessage={sendMessage} lastMessage={lastMessage}/>
         )
       ) : (
         <Login onLogin={handleLogin} />
