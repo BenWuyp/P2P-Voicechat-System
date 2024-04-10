@@ -1,26 +1,19 @@
 import React, { useState, useEffect } from "react";
 import "tailwindcss/tailwind.css";
 
-const Chatroom = ({ username, chatroomID, chatroomName, onQuit }) => {
+const Chatroom = ({
+  username,
+  chatroomID,
+  chatroomName,
+  onQuit,
+  sendMessage,
+}) => {
   const [isMuted, setIsMuted] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [RecorderName, setRecorderName] = useState(false);
   const [enableCam, setEnableCam] = useState(false);
   const [enableVoiceChange, setEnableVoiceChange] = useState(false);
-  const [ws, setWs] = useState(null);
   const [recordedTime, setRecordedTime] = useState("00:00");
-
-  useEffect(() => {
-
-    const socket = new WebSocket("ws://localhost:8765/");
-    socket.onopen = () => {
-      console.log("WebSocket connection is open.");
-
-      // Send a id message when the connection is open
-      socket.send("1");
-      setWs(socket);
-    };
-  }, []);
 
   useEffect(() => {
     let intervalId;
@@ -50,9 +43,11 @@ const Chatroom = ({ username, chatroomID, chatroomName, onQuit }) => {
   const handleRecord = () => {
     setRecorderName(username);
     if (isRecording) {
-      ws.send(JSON.stringify({ action: "end_record", payload: undefined }));
+      sendMessage(JSON.stringify({ action: "end_record", payload: undefined }));
     } else {
-      ws.send(JSON.stringify({ action: "start_record", payload: undefined }));
+      sendMessage(
+        JSON.stringify({ action: "start_record", payload: undefined })
+      );
     }
     setIsRecording(!isRecording);
   };
