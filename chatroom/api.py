@@ -24,6 +24,7 @@ stream = p.open(
 
 recordings = {}
 
+
 def start_recording(client_id):
     global recordings, output_wave, mute_status
     recordings[client_id] = True
@@ -41,16 +42,11 @@ def start_recording(client_id):
             data = stream.read(1024)
             output_wave.writeframes(data)
 
+
 def stop_recording(client_id):
     global recordings
     recordings[client_id] = False
     print(f"Recording stopped for {client_id}")
-
-
-async def notify_clients(chatroom):
-    if chatroom in chatrooms:
-        message = ",".join(chatrooms[chatroom])
-        await asyncio.gather(*[client.send(message) for client in chatrooms[chatroom]])
 
 
 async def handle_client(websocket):
@@ -84,7 +80,8 @@ async def handle_client(websocket):
             elif data['action'] == 'exit':
                 break
             elif data['action'] == 'start_record':
-                threading.Thread(target=start_recording, args=(client_id,)).start()
+                threading.Thread(target=start_recording,
+                                 args=(client_id,)).start()
             elif data['action'] == 'end_record':
                 stop_recording(client_id)
     finally:
