@@ -5,7 +5,7 @@ from pydub.playback import play
 sound = AudioSegment.from_wav("1.wav")
 
 # Shift the pitch up by half an octave (speed will not increase)
-octaves = 0.25
+octaves = -0.25
 new_sample_rate = int(sound.frame_rate * (2.0 ** octaves))
 
 # Keep the same samples but tell the computer they ought to be played at the
@@ -18,4 +18,5 @@ hipitch_sound = sound._spawn(sound.raw_data, overrides={"frame_rate": new_sample
 hipitch_sound = hipitch_sound.set_frame_rate(44100)
 
 # Export the high pitch sound to a wav file
-hipitch_sound.export("high_pitch.wav", format="wav")
+hipitch_sound.export("low_pitch.wav", format="wav")
+
