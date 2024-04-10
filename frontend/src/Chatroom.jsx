@@ -8,18 +8,40 @@ const Chatroom = ({ username, chatroomID, chatroomName, onQuit }) => {
   const [enableCam, setEnableCam] = useState(false);
   const [enableVoiceChange, setEnableVoiceChange] = useState(false);
   const [ws, setWs] = useState(null);
-  
+  const [recordedTime, setRecordedTime] = useState("00:00");
+
   useEffect(() => {
 
     const socket = new WebSocket("ws://localhost:8765/");
     socket.onopen = () => {
       console.log("WebSocket connection is open.");
 
-      // Send a message when the connection is open
+      // Send a id message when the connection is open
       socket.send("1");
       setWs(socket);
     };
   }, []);
+
+  useEffect(() => {
+    let intervalId;
+
+    if (isRecording) {
+      let seconds = 0;
+      intervalId = setInterval(() => {
+        seconds++;
+        const minutes = Math.floor(seconds / 60);
+        const formattedTime = `${String(minutes).padStart(2, "0")}:${String(
+          seconds % 60
+        ).padStart(2, "0")}`;
+        setRecordedTime(formattedTime);
+      }, 1000);
+    }
+
+    return () => {
+      clearInterval(intervalId);
+      setRecordedTime("00:00");
+    };
+  }, [isRecording]);
 
   const handleMute = () => {
     setIsMuted(!isMuted);
@@ -28,9 +50,9 @@ const Chatroom = ({ username, chatroomID, chatroomName, onQuit }) => {
   const handleRecord = () => {
     setRecorderName(username);
     if (isRecording) {
-      ws.send("end_record:");
+      ws.send(JSON.stringify({ action: "end_record", payload: undefined }));
     } else {
-      ws.send("start_record:");
+      ws.send(JSON.stringify({ action: "start_record", payload: undefined }));
     }
     setIsRecording(!isRecording);
   };
@@ -75,7 +97,7 @@ const Chatroom = ({ username, chatroomID, chatroomName, onQuit }) => {
           <h3>
             {isRecording ? "Recording in Progress" : " "}
             <br></br>
-            {isRecording ? "Recorded Time: mm:ss" : " "}
+            {isRecording ? `Recorded Time: ${recordedTime}` : " "}
           </h3>
         </p>
         <hr></hr>
