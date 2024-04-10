@@ -8,6 +8,7 @@ import threading
 
 chatrooms = {}
 ws = {}
+mute_status = {}
 
 recording = False
 output_wave = None
@@ -22,8 +23,8 @@ stream = p.open(
 )
 
 
-def start_recording():
-    global recording, output_wave
+def start_recording(client_id):
+    global recording, output_wave, mute_status
     recording = True
 
     output_wave = wave.open(
@@ -35,8 +36,9 @@ def start_recording():
     print("Recording started")
 
     while recording:
-        data = stream.read(1024)
-        output_wave.writeframes(data)
+        if not mute_status.get(client_id, False):
+            data = stream.read(1024)
+            output_wave.writeframes(data)
 
 
 def stop_recording():
@@ -58,6 +60,8 @@ async def handle_client(websocket):
         while True:
             data = await websocket.recv()
             data = json.loads(data)
+            if data['action'] == 'mute':
+                mute_status[client_id] = data['payload']
             if data['action'] == 'create':
                 chatroom = data['payload']
                 chatrooms[chatroom] = {
@@ -80,11 +84,12 @@ async def handle_client(websocket):
             elif data['action'] == 'exit':
                 break
             elif data['action'] == 'start_record':
-                threading.Thread(target=start_recording).start()
+                threading.Thread(target=start_recording, args=(client_id,)).start()
             elif data['action'] == 'end_record':
                 stop_recording()
     finally:
         del ws[client_id]
+        del mute_status[client_id]
         empty_room = None
         for chatroom, obj in chatrooms.items():
             lst = obj['members']

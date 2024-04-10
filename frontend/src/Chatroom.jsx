@@ -37,7 +37,11 @@ const Chatroom = ({
   }, [isRecording]);
 
   const handleMute = () => {
-    setIsMuted(!isMuted);
+    setIsMuted((prevMuteStatus) => {
+      const newMuteStatus = !prevMuteStatus;
+      sendMessage(JSON.stringify({ action: "mute", payload: newMuteStatus }));
+      return newMuteStatus;
+    });
   };
 
   const handleRecord = () => {
