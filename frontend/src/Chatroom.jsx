@@ -68,7 +68,7 @@ const Chatroom = ({
         <hr></hr>
         <h2 className="text-xl mb-4">Chatroom: {chatroomName}</h2>
         <h2 className="text-xl mb-4">Chatroom Id: {chatroomID}</h2>
-        <h2 className="text-xl mb-4">No. Participants</h2>
+        <h2 className="text-xl mb-4">{chatroomID} Participants</h2>
         <hr></hr>
         <ul>
           <li className="mb-2">participant 1</li>
