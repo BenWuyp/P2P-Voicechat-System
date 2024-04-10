@@ -82,10 +82,10 @@ const Dashboard = ({ username, onLogout, onJoin, sendMessage, lastMessage}) => {
         <h1 className="text-2xl font-extrabold text-white tracking-tight">KK Voice Chat</h1>
         <hr></hr>
         <nav>
-          <a onClick={handleChatroomsClick} className="block py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700 hover:text-white">
+          <a onClick={handleChatroomsClick} className="block py-2.5 px-4 rounded transition duration-200 bg-indigo-300 hover:bg-indigo-700 hover:text-white">
             Chatrooms
           </a>
-          <a onClick={handleLogout} className="block py-2.5 px-4 rounded transition duration-200 hover:bg-indigo-700 hover:text-white">
+          <a onClick={handleLogout} className="block py-2.5 px-4 rounded transition duration-200 hover: bg-indigo-300 bg-indigo-700 hover:text-white">
             Logout
           </a>
         </nav>
