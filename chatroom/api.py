@@ -22,29 +22,29 @@ stream = p.open(
     frames_per_buffer=1024
 )
 
+recordings = {}
 
 def start_recording(client_id):
-    global recording, output_wave, mute_status
-    recording = True
+    global recordings, output_wave, mute_status
+    recordings[client_id] = True
 
     output_wave = wave.open(
-        f"recording_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.wav", "wb")
+        f"recording_{client_id}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.wav", "wb")
     output_wave.setnchannels(1)
     output_wave.setsampwidth(p.get_sample_size(pyaudio.paInt16))
     output_wave.setframerate(44100)
 
-    print("Recording started")
+    print(f"Recording started for {client_id}")
 
-    while recording:
+    while recordings[client_id]:
         if not mute_status.get(client_id, False):
             data = stream.read(1024)
             output_wave.writeframes(data)
 
-
-def stop_recording():
-    global recording
-    recording = False
-    print("Recording stopped")
+def stop_recording(client_id):
+    global recordings
+    recordings[client_id] = False
+    print(f"Recording stopped for {client_id}")
 
 
 async def notify_clients(chatroom):
@@ -86,7 +86,7 @@ async def handle_client(websocket):
             elif data['action'] == 'start_record':
                 threading.Thread(target=start_recording, args=(client_id,)).start()
             elif data['action'] == 'end_record':
-                stop_recording()
+                stop_recording(client_id)
     finally:
         del ws[client_id]
         del mute_status[client_id]
@@ -101,6 +101,7 @@ async def handle_client(websocket):
                 empty_room = chatroom
         if (empty_room):
             del chatrooms[empty_room]
+
 
 start_server = websockets.serve(handle_client, 'localhost', 8765)
 
