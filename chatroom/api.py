@@ -1,8 +1,47 @@
 import asyncio
 import websockets
+import pyaudio
+import wave
+import datetime
+import threading
 
 connected_clients = set()
 chatrooms = {}
+
+recording = False
+output_wave = None
+p = pyaudio.PyAudio()
+
+stream = p.open(
+    format=pyaudio.paInt16,
+    channels=1,
+    rate=44100,
+    input=True,
+    frames_per_buffer=1024
+)
+
+
+def start_recording():
+    global recording, output_wave
+    recording = True
+
+    output_wave = wave.open(
+        f"recording_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.wav", "wb")
+    output_wave.setnchannels(1)
+    output_wave.setsampwidth(p.get_sample_size(pyaudio.paInt16))
+    output_wave.setframerate(44100)
+
+    print("Recording started")
+
+    while recording:
+        data = stream.read(1024)
+        output_wave.writeframes(data)
+
+
+def stop_recording():
+    global recording
+    recording = False
+    print("Recording stopped")
 
 
 async def notify_clients(chatroom):
@@ -41,6 +80,10 @@ async def handle_client(websocket):
                         chatroom_str += id + '+'
                     chatroom_list.append(chatroom_str)
                 await websocket.send(",".join(chatroom_list))
+            elif action == 'start_record':
+                threading.Thread(target=start_recording).start()
+            elif action == 'end_record':
+                stop_recording()
             elif action == 'exit':
                 break
     finally:
