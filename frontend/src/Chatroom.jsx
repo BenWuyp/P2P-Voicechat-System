@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 
 const Chatroom = ({
   username,
@@ -24,12 +24,12 @@ const Chatroom = ({
   let chunks = [];
 
   useEffect(() => {
-    const serverIp = '125.59.219.35'; // Replace with your server IP
-    const serverPort = '8765'; // Replace with your server port if different
+    const serverIp = "125.59.219.35"; // Replace with your server IP
+    const serverPort = "8765"; // Replace with your server port if different
     websocket = new WebSocket(`ws://${serverIp}:${serverPort}`);
 
     websocket.onopen = async () => {
-      console.log('Connected to the server');
+      console.log("Connected to the server");
       await startRecording();
     };
 
@@ -38,7 +38,7 @@ const Chatroom = ({
     };
 
     websocket.onclose = () => {
-      console.log('Disconnected from the server');
+      console.log("Disconnected from the server");
       stopRecording();
     };
 
@@ -93,19 +93,30 @@ const Chatroom = ({
       if (isMuted) {
         const jsonStr = JSON.stringify({ action: "mute", payload: true });
         websocket.send(jsonStr);
-  
+
         console.log("stop");
         stopRecording();
       } else {
         const jsonStr = JSON.stringify({ action: "mute", payload: false });
         websocket.send(jsonStr);
-  
+
         console.log("start");
         startRecording();
       }
     }
   }, [isMuted, websocket]);
-  
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      sendMessage(
+        JSON.stringify({ action: "fetch_recordings", payload: undefined })
+      );
+    }, 1000);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, []);
 
   async function startRecording() {
     let stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -126,21 +137,23 @@ const Chatroom = ({
     mediaRecorder.start();
 
     // On data available, push the audio chunk to the chunks array
-    mediaRecorder.ondataavailable = function(e) {
+    mediaRecorder.ondataavailable = function (e) {
       chunks.push(e.data);
-    }
+    };
 
     // On stop, send the audio data to the server
-    mediaRecorder.onstop = function(e) {
-      const blob = new Blob(chunks, { 'type' : 'audio/ogg; codecs=opus' });
+    mediaRecorder.onstop = function (e) {
+      const blob = new Blob(chunks, { type: "audio/ogg; codecs=opus" });
       chunks = [];
       const reader = new FileReader();
-      reader.onloadend = function() {
+      reader.onloadend = function () {
         const base64data = reader.result;
-        websocket.send(JSON.stringify({ action: 'send_recording', payload: base64data }));
-      }
+        websocket.send(
+          JSON.stringify({ action: "send_recording", payload: base64data })
+        );
+      };
       reader.readAsDataURL(blob);
-    }
+    };
   }
 
   function stopRecording() {
@@ -165,6 +178,7 @@ const Chatroom = ({
         JSON.stringify({ action: "start_record", payload: undefined })
       );
     }
+    setIsRecording(!isRecording);
 
     // // Create an audio context
     // let audioContext = new AudioContext();
@@ -187,11 +201,6 @@ const Chatroom = ({
     // sourceNode.connect(workletNode);
 
     // workletNode.port.postMessage({ action: "start" });
-
-    sendMessage(
-      JSON.stringify({ action: "fetch_recordings", payload: undefined })
-    );
-    setIsRecording(!isRecording);
   };
 
   const handleVideo = () => {
