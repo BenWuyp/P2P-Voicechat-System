@@ -28,8 +28,9 @@ const Chatroom = ({
     const serverPort = '8765'; // Replace with your server port if different
     websocket = new WebSocket(`ws://${serverIp}:${serverPort}`);
 
-    websocket.onopen = () => {
+    websocket.onopen = async () => {
       console.log('Connected to the server');
+      await startRecording();
     };
 
     websocket.onmessage = (event) => {
@@ -38,6 +39,7 @@ const Chatroom = ({
 
     websocket.onclose = () => {
       console.log('Disconnected from the server');
+      stopRecording();
     };
 
     websocket.onerror = (error) => {
