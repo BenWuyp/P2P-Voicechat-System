@@ -18,6 +18,9 @@ const Chatroom = ({
   const [recordingList, setRecordingList] = useState([]);
   const [selectedRecording, setSelectedRecording] = useState("");
 
+  let audioContext;
+  let sourceNode;
+
   useEffect(() => {
     let intervalId;
 
@@ -45,30 +48,58 @@ const Chatroom = ({
     }
   }, [lastMessage]);
 
-  async function startRecording() {
-    let stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    
-    // Create an audio context
-    let audioContext = new AudioContext();
-    
-    // Create a source node from the stream
-    let sourceNode = audioContext.createMediaStreamSource(stream);
-    
-    // Connect the source node to the destination (the speakers)
-    sourceNode.connect(audioContext.destination);
-  }
+  useEffect(() => {
+    if (isMuted) {
+      console.log("stop")
+      stopRecording();
+    } else {
+      console.log("start")
+      startRecording();
+    }
+  }, [isMuted]); // Run the effect whenever `isMuted` changes
   
-  
-  
+  let isConnected = false;
 
-  const handleMute = () => {
-    setIsMuted((prevMuteStatus) => {
-      const newMuteStatus = !prevMuteStatus;
-      sendMessage(JSON.stringify({ action: "mute", payload: newMuteStatus }));
-      return newMuteStatus;
-    });
-    startRecording(); // Start recording and playback immediately
-  };
+async function startRecording() {
+  if (isMuted) {
+    console.log("Microphone is muted, not starting recording.");
+    return;
+  }
+
+  let stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  
+  // Create an audio context
+  audioContext = new AudioContext();
+  
+  // Create a source node from the stream
+  sourceNode = audioContext.createMediaStreamSource(stream);
+  
+  // Connect the source node to the destination (the speakers)
+  sourceNode.connect(audioContext.destination);
+  isConnected = true;
+}
+
+function stopRecording() {
+  if (sourceNode && isConnected) {
+    // Disconnect the source node from the audio context
+    sourceNode.disconnect(audioContext.destination);
+    isConnected = false;
+  }
+}
+
+const handleMute = () => {
+  setIsMuted((prevMuteStatus) => {
+    const newMuteStatus = !prevMuteStatus;
+
+    if (newMuteStatus) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+
+    return newMuteStatus;
+  });
+};
 
   const handleRecord = () => {
     setRecorderName(username);
