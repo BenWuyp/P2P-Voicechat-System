@@ -40,26 +40,23 @@ const Chatroom = ({
   }, [isRecording]);
 
   useEffect(() => {
-    if (lastMessage.data[0] !== "{") {
+    if (lastMessage.data[0] !== "{" && lastMessage.data[0] === "[") {
       setRecordingList(JSON.parse(lastMessage.data));
     }
   }, [lastMessage]);
 
   async function startRecording() {
     let stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    
+
     // Create an audio context
     let audioContext = new AudioContext();
-    
+
     // Create a source node from the stream
     let sourceNode = audioContext.createMediaStreamSource(stream);
-    
+
     // Connect the source node to the destination (the speakers)
     sourceNode.connect(audioContext.destination);
   }
-  
-  
-  
 
   const handleMute = () => {
     setIsMuted((prevMuteStatus) => {
@@ -70,15 +67,39 @@ const Chatroom = ({
     startRecording(); // Start recording and playback immediately
   };
 
-  const handleRecord = () => {
+  const handleRecord = async () => {
     setRecorderName(username);
-    if (isRecording) {
-      sendMessage(JSON.stringify({ action: "end_record", payload: undefined }));
-    } else {
-      sendMessage(
-        JSON.stringify({ action: "start_record", payload: undefined })
-      );
-    }
+    // if (isRecording) {
+    //   sendMessage(JSON.stringify({ action: "end_record", payload: undefined }));
+    // } else {
+    //   sendMessage(
+    //     JSON.stringify({ action: "start_record", payload: undefined })
+    //   );
+    // }
+    // let stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+    // // Create an audio context
+    // let audioContext = new AudioContext();
+
+    // await audioContext.audioWorklet.addModule("processor.js");
+
+    // // Create an instance of the audio worklet node
+    // const workletNode = new AudioWorkletNode(
+    //   audioContext,
+    //   "audio-worklet-processor"
+    // );
+
+    // // Connect the worklet node to the destination (the speakers)
+    // workletNode.connect(audioContext.destination);
+
+    // // Create a media stream source from the user media stream
+    // const sourceNode = audioContext.createMediaStreamSource(stream);
+
+    // // Connect the source node to the worklet node
+    // sourceNode.connect(workletNode);
+
+    // workletNode.port.postMessage({ action: "start" });
+
     sendMessage(
       JSON.stringify({ action: "fetch_recordings", payload: undefined })
     );
@@ -100,7 +121,24 @@ const Chatroom = ({
   const handlePlayRecording = () => {
     // Implement logic to play the selected recording
     console.log("Playing recording:", selectedRecording);
+
+    sendMessage(
+      JSON.stringify({ action: "fetch_recording", payload: selectedRecording })
+    );
+
+    if (lastMessage.data[0] !== "{" && lastMessage.data[0] !== "[") {
+      const binaryData = Uint8Array.from(atob(lastMessage.data), (c) =>
+        c.charCodeAt(0)
+      );
+      const audioBlob = new Blob([binaryData], { type: "audio/wav" });
+      const audioUrl = URL.createObjectURL(audioBlob);
+
+      // Play the audio using the URL
+      const audio = new Audio(audioUrl);
+      audio.play();
+    }
   };
+
   return (
     <div className="flex flex-col min-h-screen">
       <div className="w-64 bg-indigo-600 w-80 space-y-6 py-7 px-2 absolute inset-y-0 left-0 transform -translate-x-full md:translate-x-0 md:inset-0 transition-transform duration-200 ease-in-out bg-indigo-600 text-white p-4">

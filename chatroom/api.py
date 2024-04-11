@@ -6,6 +6,7 @@ import wave
 import datetime
 import threading
 import glob
+import base64
 
 chatrooms = {}
 ws = {}
@@ -92,9 +93,21 @@ async def handle_client(websocket):
                 stop_recording(client_id)
             elif data['action'] == 'fetch_recordings':
                 await websocket.send(json.dumps(fetch_recordings()))
+            elif data['action'] == 'send_recording':
+                print("receiving audio stream")
+            elif data['action'] == 'fetch_recording':
+                file_name = data['payload']
+                try:
+                    with open(file_name, 'rb') as audio_file:
+                        audio_data = audio_file.read()
+                        audio_str = base64.b64encode(
+                            audio_data).decode('utf-8')
+                        await websocket.send(audio_str)
+                except FileNotFoundError:
+                    await websocket.send('File not found')
     finally:
         del ws[client_id]
-        del mute_status[client_id]
+        # del mute_status[client_id]
         empty_room = None
         for chatroom, obj in chatrooms.items():
             lst = obj['members']
@@ -115,4 +128,3 @@ try:
     asyncio.get_event_loop().run_forever()
 except Exception as e:
     print(f"Error occurred: {e}")
-
