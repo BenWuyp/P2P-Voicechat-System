@@ -57,12 +57,17 @@ def fetch_recordings():
 
 
 async def handle_client(websocket, path):
-    client_id = await websocket.recv()
-    ws[client_id] = websocket
-    mute_status[client_id] = False
+    client_id = None
     try:
+        client_id = await websocket.recv()
+        ws[client_id] = websocket
+        mute_status[client_id] = False
         while True:
-            data = await websocket.recv()
+            try:
+                data = await websocket.recv()
+            except websockets.exceptions.ConnectionClosed:
+                print(f"Connection with client {client_id} closed.")
+                break
             data = json.loads(data)
             if data['action'] == 'mute':
                 mute_status[client_id] = data['payload']
@@ -108,7 +113,8 @@ async def handle_client(websocket, path):
                 except FileNotFoundError:
                     await websocket.send('File not found')
     finally:
-        del ws[client_id]
+        if client_id in ws:
+            del ws[client_id]
         # del mute_status[client_id]
         empty_room = None
         for chatroom, obj in chatrooms.items():
