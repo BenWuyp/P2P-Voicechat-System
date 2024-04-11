@@ -61,58 +61,46 @@ const Chatroom = ({
 
   useEffect(() => {
     if (isMuted) {
-      console.log("stop");
+      const jsonStr = JSON.stringify({'action': 'mute', 'payload': true})
+      sendMessage(jsonStr)
+
+      console.log("stop")
       stopRecording();
     } else {
-      console.log("start");
+      const jsonStr = JSON.stringify({'action': 'mute', 'payload': false})
+      sendMessage(jsonStr)
+
+      console.log("start")
       startRecording();
     }
-  }, [isMuted]); // Run the effect whenever `isMuted` changes
 
-  let isConnected = false;
+  }, [isMuted]);
+  
 
-  async function startRecording() {
-    if (isMuted) {
-      console.log("Microphone is muted, not starting recording.");
-      return;
-    }
+async function startRecording() {
 
-    let stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  let stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  
+  // Create an audio context
+  audioContext = new AudioContext();
+  
+  // Create a source node from the stream
+  sourceNode = audioContext.createMediaStreamSource(stream);
+  
+  // Connect the source node to the destination (the speakers)
+  sourceNode.connect(audioContext.destination);
+}
 
-    // Create an audio context
-    audioContext = new AudioContext();
-
-    // Create a source node from the stream
-    sourceNode = audioContext.createMediaStreamSource(stream);
-
-    // Connect the source node to the destination (the speakers)
-    sourceNode.connect(audioContext.destination);
-    isConnected = true;
+function stopRecording() {
+  console.log(sourceNode)
+  if (sourceNode) {
+    // Disconnect the source node from the audio context
+    console.log('running in sourceNode')
+    sourceNode.disconnect(audioContext.destination);
   }
+}
 
-  function stopRecording() {
-    if (sourceNode && isConnected) {
-      // Disconnect the source node from the audio context
-      sourceNode.disconnect(audioContext.destination);
-      isConnected = false;
-    }
-  }
-
-  const handleMute = () => {
-    setIsMuted((prevMuteStatus) => {
-      const newMuteStatus = !prevMuteStatus;
-
-      if (newMuteStatus) {
-        stopRecording();
-      } else {
-        startRecording();
-      }
-
-      return newMuteStatus;
-    });
-  };
-
-  const handleRecord = async () => {
+  const handleRecord = () => {
     setRecorderName(username);
     if (isRecording) {
       sendMessage(JSON.stringify({ action: "end_record", payload: undefined }));
@@ -190,7 +178,7 @@ const Chatroom = ({
         <hr></hr>
         <p>
           <button
-            onClick={handleMute}
+            onClick={()=>{setIsMuted(!isMuted)}}
             className="border border-white border-3 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700"
           >
             {isMuted ? "🔇" : "🔊"}

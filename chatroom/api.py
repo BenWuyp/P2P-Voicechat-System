@@ -28,7 +28,7 @@ recordings = {}
 
 
 def start_recording(client_id):
-    global recordings, output_wave, mute_status
+    global recordings, output_wave
     recordings[client_id] = True
 
     output_wave = wave.open(
@@ -40,7 +40,7 @@ def start_recording(client_id):
     print(f"Recording started for {client_id}")
 
     while recordings[client_id]:
-        if not mute_status.get(client_id, False):
+        if not mute_status[client_id]:
             data = stream.read(1024)
             output_wave.writeframes(data)
 
@@ -59,13 +59,14 @@ def fetch_recordings():
 async def handle_client(websocket):
     client_id = await websocket.recv()
     ws[client_id] = websocket
+    mute_status[client_id] = False
     try:
         while True:
             data = await websocket.recv()
             data = json.loads(data)
             if data['action'] == 'mute':
                 mute_status[client_id] = data['payload']
-            if data['action'] == 'create':
+            elif data['action'] == 'create':
                 chatroom = data['payload']
                 chatrooms[chatroom] = {
                     'createdBy': client_id, 'members': [client_id]}
