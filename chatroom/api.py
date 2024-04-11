@@ -7,6 +7,7 @@ import datetime
 import threading
 import glob
 import base64
+import subprocess
 
 chatrooms = {}
 ws = {}
@@ -101,7 +102,8 @@ async def handle_client(websocket, path):
                 await websocket.send(json.dumps(fetch_recordings()))
             elif data['action'] == 'send_recording':
                 print("Received audio stream from client: ", client_id)
-                print("Audio data: ", data['payload'])  # Print out the received audio data
+                # Print out the received audio data
+                print("Audio data: ", data['payload'])
             elif data['action'] == 'fetch_recording':
                 file_name = data['payload']
                 try:
@@ -112,6 +114,13 @@ async def handle_client(websocket, path):
                         await websocket.send(audio_str)
                 except FileNotFoundError:
                     await websocket.send('File not found')
+            elif data['action'] == 'run_client':
+                try:
+                    print("running client")
+                    subprocess.run(
+                        ['python', 'voicechatclient.py'], check=True)
+                except subprocess.CalledProcessError as e:
+                    print(f"Error running client.py: {e}")
     finally:
         if client_id in ws:
             del ws[client_id]

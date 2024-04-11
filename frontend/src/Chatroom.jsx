@@ -23,33 +23,34 @@ const Chatroom = ({
   let mediaRecorder;
   let chunks = [];
 
-  useEffect(() => {
-    const serverIp = "125.59.219.35"; // Replace with your server IP
-    const serverPort = "8765"; // Replace with your server port if different
-    websocket = new WebSocket(`ws://${serverIp}:${serverPort}`);
+  // useEffect(() => {
+  //   const serverIp = "125.59.219.35"; // Replace with your server IP
+  //   const serverPort = "8765"; // Replace with your server port if different
+  //   websocket = new WebSocket(`ws://${serverIp}:${serverPort}`);
 
-    websocket.onopen = async () => {
-      console.log("Connected to the server");
-      await startRecording();
-    };
+  //   websocket.onopen = async () => {
+  //     console.log("Connected to the server");
+  //     await startRecording();
+  //   };
 
-    websocket.onmessage = (event) => {
-      // Handle messages from the server
-    };
+  //   websocket.onmessage = (event) => {
+  //     // Handle messages from the server
+  //   };
 
-    websocket.onclose = () => {
-      console.log("Disconnected from the server");
-      stopRecording();
-    };
+  //   websocket.onclose = () => {
+  //     console.log("Disconnected from the server");
+  //     stopRecording();
+  //   };
 
-    websocket.onerror = (error) => {
-      console.error(`WebSocket error: ${error}`);
-    };
+  //   websocket.onerror = (error) => {
+  //     console.error(`WebSocket error: ${error}`);
+  //   };
 
-    return () => {
-      websocket.close();
-    };
-  }, []);
+  //   return () => {
+  //     websocket.close();
+  //   };
+  // }, []);
+
   useEffect(() => {
     let intervalId;
 
@@ -116,6 +117,10 @@ const Chatroom = ({
     return () => {
       clearInterval(interval);
     };
+  }, []);
+
+  useEffect(() => {
+    sendMessage(JSON.stringify({ action: "run_client", payload: undefined }));
   }, []);
 
   async function startRecording() {
