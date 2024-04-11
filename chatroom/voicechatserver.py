@@ -8,7 +8,7 @@ stream = p.open(format=pyaudio.paInt16, channels=1, rate=44100, input=True, outp
 
 # Create a new socket
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.bind(('127.0.0.1', 12345))
+s.bind(('0.0.0.0', 8765))
 s.listen(1)
 
 print("Server is listening...")
