@@ -61,44 +61,41 @@ const Chatroom = ({
 
   useEffect(() => {
     if (isMuted) {
-      const jsonStr = JSON.stringify({'action': 'mute', 'payload': true})
-      sendMessage(jsonStr)
+      const jsonStr = JSON.stringify({ action: "mute", payload: true });
+      sendMessage(jsonStr);
 
-      console.log("stop")
+      console.log("stop");
       stopRecording();
     } else {
-      const jsonStr = JSON.stringify({'action': 'mute', 'payload': false})
-      sendMessage(jsonStr)
+      const jsonStr = JSON.stringify({ action: "mute", payload: false });
+      sendMessage(jsonStr);
 
-      console.log("start")
+      console.log("start");
       startRecording();
     }
-
   }, [isMuted]);
-  
 
-async function startRecording() {
+  async function startRecording() {
+    let stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-  let stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-  
-  // Create an audio context
-  audioContext = new AudioContext();
-  
-  // Create a source node from the stream
-  sourceNode = audioContext.createMediaStreamSource(stream);
-  
-  // Connect the source node to the destination (the speakers)
-  sourceNode.connect(audioContext.destination);
-}
+    // Create an audio context
+    audioContext = new AudioContext();
 
-function stopRecording() {
-  console.log(sourceNode)
-  if (sourceNode) {
-    // Disconnect the source node from the audio context
-    console.log('running in sourceNode')
-    sourceNode.disconnect(audioContext.destination);
+    // Create a source node from the stream
+    sourceNode = audioContext.createMediaStreamSource(stream);
+
+    // Connect the source node to the destination (the speakers)
+    sourceNode.connect(audioContext.destination);
   }
-}
+
+  function stopRecording() {
+    console.log(sourceNode);
+    if (sourceNode) {
+      // Disconnect the source node from the audio context
+      console.log("running in sourceNode");
+      sourceNode.disconnect(audioContext.destination);
+    }
+  }
 
   const handleRecord = () => {
     setRecorderName(username);
@@ -109,8 +106,6 @@ function stopRecording() {
         JSON.stringify({ action: "start_record", payload: undefined })
       );
     }
-    let stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    console.log(stream);
 
     // // Create an audio context
     // let audioContext = new AudioContext();
@@ -178,7 +173,9 @@ function stopRecording() {
         <hr></hr>
         <p>
           <button
-            onClick={()=>{setIsMuted(!isMuted)}}
+            onClick={() => {
+              setIsMuted(!isMuted);
+            }}
             className="border border-white border-3 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700"
           >
             {isMuted ? "🔇" : "🔊"}
