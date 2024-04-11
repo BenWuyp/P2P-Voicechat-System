@@ -45,12 +45,29 @@ const Chatroom = ({
     }
   }, [lastMessage]);
 
+  async function startRecording() {
+    let stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    
+    // Create an audio context
+    let audioContext = new AudioContext();
+    
+    // Create a source node from the stream
+    let sourceNode = audioContext.createMediaStreamSource(stream);
+    
+    // Connect the source node to the destination (the speakers)
+    sourceNode.connect(audioContext.destination);
+  }
+  
+  
+  
+
   const handleMute = () => {
     setIsMuted((prevMuteStatus) => {
       const newMuteStatus = !prevMuteStatus;
       sendMessage(JSON.stringify({ action: "mute", payload: newMuteStatus }));
       return newMuteStatus;
     });
+    startRecording(); // Start recording and playback immediately
   };
 
   const handleRecord = () => {
