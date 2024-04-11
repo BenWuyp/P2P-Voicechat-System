@@ -46,17 +46,6 @@ const Chatroom = ({
     if (lastMessage.data[0] !== "{" && lastMessage.data[0] === "[") {
       setRecordingList(JSON.parse(lastMessage.data));
     }
-    if (lastMessage.data[0] !== "{" && lastMessage.data[0] !== "[") {
-      const binaryData = Uint8Array.from(atob(lastMessage.data), (c) =>
-        c.charCodeAt(0)
-      );
-      const audioBlob = new Blob([binaryData], { type: "audio/wav" });
-      const audioUrl = URL.createObjectURL(audioBlob);
-
-      // Play the audio using the URL
-      const audio = new Audio(audioUrl);
-      audio.play();
-    }
   }, [lastMessage]);
 
   useEffect(() => {
@@ -114,15 +103,14 @@ const Chatroom = ({
 
   const handleRecord = async () => {
     setRecorderName(username);
-    if (isRecording) {
-      sendMessage(JSON.stringify({ action: "end_record", payload: undefined }));
-    } else {
-      sendMessage(
-        JSON.stringify({ action: "start_record", payload: undefined })
-      );
-    }
-    let stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    console.log(stream);
+    // if (isRecording) {
+    //   sendMessage(JSON.stringify({ action: "end_record", payload: undefined }));
+    // } else {
+    //   sendMessage(
+    //     JSON.stringify({ action: "start_record", payload: undefined })
+    //   );
+    // }
+    // let stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
     // // Create an audio context
     // let audioContext = new AudioContext();
@@ -165,10 +153,24 @@ const Chatroom = ({
   };
 
   const handlePlayRecording = () => {
+    // Implement logic to play the selected recording
     console.log("Playing recording:", selectedRecording);
+
     sendMessage(
       JSON.stringify({ action: "fetch_recording", payload: selectedRecording })
     );
+
+    if (lastMessage.data[0] !== "{" && lastMessage.data[0] !== "[") {
+      const binaryData = Uint8Array.from(atob(lastMessage.data), (c) =>
+        c.charCodeAt(0)
+      );
+      const audioBlob = new Blob([binaryData], { type: "audio/wav" });
+      const audioUrl = URL.createObjectURL(audioBlob);
+
+      // Play the audio using the URL
+      const audio = new Audio(audioUrl);
+      audio.play();
+    }
   };
 
   return (
