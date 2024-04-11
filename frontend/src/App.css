@@ -44,3 +44,7 @@
 #recording {
   color: black;
 }
+.background {
+  background-image: url('./assets/loginscreen.jpg'); 
+  background-size: cover;
+}

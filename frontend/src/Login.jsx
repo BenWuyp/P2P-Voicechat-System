@@ -1,4 +1,4 @@
-import './App.css'
+import './App.css';
 import React, { useState } from 'react';
 import 'tailwindcss/tailwind.css';
 
@@ -14,10 +14,10 @@ const Login = ({ onLogin }) => {
   };
 
   return (
-    <div className="max-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+    <div className="h-screen w-screen flex items-center justify-center background py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8 bg-white bg-opacity-60 rounded-lg p-6">
         <div>
-        <h1 className="mt-6 text-center text-4xl font-extrabold text-gray-900">
+          <h1 className="mt-6 text-center text-4xl font-extrabold text-gray-900">
             KK Voice Chat
           </h1>
           <h2 className="mt-6 text-center text-xl font-extrabold text-gray-900">
