@@ -56,7 +56,7 @@ def fetch_recordings():
     return wav_files
 
 
-async def handle_client(websocket):
+async def handle_client(websocket, path):
     client_id = await websocket.recv()
     ws[client_id] = websocket
     mute_status[client_id] = False
@@ -95,7 +95,8 @@ async def handle_client(websocket):
             elif data['action'] == 'fetch_recordings':
                 await websocket.send(json.dumps(fetch_recordings()))
             elif data['action'] == 'send_recording':
-                print("receiving audio stream")
+                print("Received audio stream from client: ", client_id)
+                print("Audio data: ", data['payload'])  # Print out the received audio data
             elif data['action'] == 'fetch_recording':
                 file_name = data['payload']
                 try:
