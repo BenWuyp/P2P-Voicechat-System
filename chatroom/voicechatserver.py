@@ -7,6 +7,9 @@ s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.bind(('0.0.0.0', 8766))
 s.listen(1)
 
+# List to keep track of connected clients
+clients = []
+
 print("Server is listening...")
 
 def handle_client(client):
@@ -22,6 +25,10 @@ def handle_client(client):
                 if not data:
                     break
                 stream.write(data)
+                # Send data to all other clients
+                for c in clients:
+                    if c != client:
+                        c.sendall(data)
             except:
                 break
 
@@ -55,5 +62,6 @@ while True:
     # Accept a connection from the client
     client, address = s.accept()
     print(f"Connected with {str(address)}")
+    clients.append(client)  # Add client to the list of connected clients
     client_handler = threading.Thread(target=handle_client, args=(client,))
     client_handler.start()
