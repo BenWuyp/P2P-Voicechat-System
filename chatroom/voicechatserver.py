@@ -23,7 +23,7 @@ def handle_client(client):
     def receive_data():
         while True:
             try:
-                data = client.recv(8)
+                data = client.recv(1024)
                 if not data:
                     break
                 # Broadcast the received data to all connected clients
@@ -43,7 +43,7 @@ def handle_client(client):
         while True:
             try:
                 if not stream.is_stopped():
-                    data = stream.read(0)
+                    data = stream.read(1024)
                     # Broadcast the audio data to all connected clients
                     for c in clients:
                             c.sendall(data)
