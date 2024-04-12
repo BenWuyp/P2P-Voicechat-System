@@ -44,7 +44,7 @@ def handle_client(client):
                     data = stream.read(1024)
                     # Broadcast the audio data to all connected clients
                     for c in clients:
-                        c.sendall(data)
+                            c.sendall(data)
                 else:
                     break
             except (ConnectionAbortedError, ConnectionResetError):

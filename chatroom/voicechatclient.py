@@ -13,9 +13,6 @@ client.connect(('125.59.219.35', 8766))
 
 print("Client is connected...")
 
-# Function to handle receiving data from the server
-
-
 def receive_data():
     while True:
         try:
@@ -23,7 +20,6 @@ def receive_data():
             stream.write(data)
         except:
             break
-
 
 # Start a new thread for receiving data from the server
 receive_thread = threading.Thread(target=receive_data)

@@ -30,7 +30,6 @@ const Chatroom = ({
 
     websocket.onopen = async () => {
       console.log("Connected to the server");
-      await startRecording();
     };
 
     websocket.onmessage = (event) => {
@@ -39,7 +38,6 @@ const Chatroom = ({
 
     websocket.onclose = () => {
       console.log("Disconnected from the server");
-      stopRecording();
     };
 
     websocket.onerror = (error) => {
@@ -95,13 +93,13 @@ const Chatroom = ({
         websocket.send(jsonStr);
 
         console.log("stop");
-        stopRecording();
+ 
       } else {
         const jsonStr = JSON.stringify({ action: "mute", payload: false });
         websocket.send(jsonStr);
 
         console.log("start");
-        startRecording();
+
       }
     }
   }, [isMuted, websocket]);
@@ -118,56 +116,6 @@ const Chatroom = ({
     };
   }, []);
 
-  async function startRecording() {
-    let stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-    // Create an audio context
-    audioContext = new AudioContext();
-
-    // Create a source node from the stream
-    sourceNode = audioContext.createMediaStreamSource(stream);
-
-    // Connect the source node to the destination (the speakers)
-    sourceNode.connect(audioContext.destination);
-
-    // Create a MediaRecorder instance
-    mediaRecorder = new MediaRecorder(stream);
-
-    // Start recording
-    mediaRecorder.start();
-
-    // On data available, push the audio chunk to the chunks array
-    mediaRecorder.ondataavailable = function (e) {
-      chunks.push(e.data);
-    };
-
-    // On stop, send the audio data to the server
-    mediaRecorder.onstop = function (e) {
-      const blob = new Blob(chunks, { type: "audio/ogg; codecs=opus" });
-      chunks = [];
-      const reader = new FileReader();
-      reader.onloadend = function () {
-        const base64data = reader.result;
-        websocket.send(
-          JSON.stringify({ action: "send_recording", payload: base64data })
-        );
-      };
-      reader.readAsDataURL(blob);
-    };
-  }
-
-  function stopRecording() {
-    console.log(sourceNode);
-    if (sourceNode) {
-      // Disconnect the source node from the audio context
-      console.log("running in sourceNode");
-      sourceNode.disconnect(audioContext.destination);
-    }
-    if (mediaRecorder) {
-      // Stop the media recorder
-      mediaRecorder.stop();
-    }
-  }
 
   const handleRecord = () => {
     setRecorderName(username);
