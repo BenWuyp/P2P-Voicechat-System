@@ -9,6 +9,9 @@ s.listen(1)
 
 print("Server is listening...")
 
+# List to store connected clients
+clients = []
+
 def handle_client(client):
     # Set up PyAudio
     p = pyaudio.PyAudio()
@@ -21,7 +24,10 @@ def handle_client(client):
                 data = client.recv(1024)
                 if not data:
                     break
-                stream.write(data)
+                # Broadcast the received data to all connected clients
+                for c in clients:
+                    if c != client:
+                        c.sendall(data)
             except:
                 break
 
@@ -36,7 +42,9 @@ def handle_client(client):
             try:
                 if not stream.is_stopped():
                     data = stream.read(1024)
-                    client.sendall(data)
+                    # Broadcast the audio data to all connected clients
+                    for c in clients:
+                        c.sendall(data)
                 else:
                     break
             except (ConnectionAbortedError, ConnectionResetError):
@@ -55,5 +63,6 @@ while True:
     # Accept a connection from the client
     client, address = s.accept()
     print(f"Connected with {str(address)}")
+    clients.append(client)  # Add the client to the list of connected clients
     client_handler = threading.Thread(target=handle_client, args=(client,))
     client_handler.start()
