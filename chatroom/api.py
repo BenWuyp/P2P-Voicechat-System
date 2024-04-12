@@ -1,12 +1,14 @@
 import asyncio
 import websockets
 import json
-import pyaudio
+import pyaudiowpatch as pyaudio
 import wave
 import datetime
 import threading
 import glob
 import base64
+from pydub import AudioSegment
+import os
 
 chatrooms = {}
 ws = {}
@@ -14,11 +16,34 @@ mute_status = {}
 
 recording = False
 output_wave = None
+
+# Speaker stream
 p = pyaudio.PyAudio()
+wasapi_info = p.get_host_api_info_by_type(pyaudio.paWASAPI)
+default_speakers = p.get_device_info_by_index(
+    wasapi_info["defaultOutputDevice"])
+print(default_speakers)
+if not default_speakers["isLoopbackDevice"]:
+    for loopback in p.get_loopback_device_info_generator():
+        if default_speakers["name"] in loopback["name"]:
+            default_speakers = loopback
+print(default_speakers)
 
 stream = p.open(
     format=pyaudio.paInt16,
-    channels=1,
+    channels=default_speakers["maxInputChannels"],
+    rate=44100,
+    frames_per_buffer=1024,
+    input=True,
+    input_device_index=default_speakers["index"]
+)
+
+# Microphone stream
+p2 = pyaudio.PyAudio()
+
+stream2 = p2.open(
+    format=pyaudio.paInt16,
+    channels=2,
     rate=44100,
     input=True,
     frames_per_buffer=1024
@@ -31,11 +56,18 @@ def start_recording(client_id):
     global recordings, output_wave
     recordings[client_id] = True
 
-    output_wave = wave.open(
-        f"recording_{client_id}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.wav", "wb")
-    output_wave.setnchannels(1)
-    output_wave.setsampwidth(p.get_sample_size(pyaudio.paInt16))
+    file1 = f"recording1_{client_id}_{
+        datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.wav"
+    output_wave = wave.open(file1, "wb")
+    output_wave.setnchannels(2)
+    output_wave.setsampwidth(pyaudio.get_sample_size(pyaudio.paInt16))
     output_wave.setframerate(44100)
+    file2 = f"recording2_{client_id}_{
+        datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.wav"
+    output_wave2 = wave.open(file2, "wb")
+    output_wave2.setnchannels(2)
+    output_wave2.setsampwidth(pyaudio.get_sample_size(pyaudio.paInt16))
+    output_wave2.setframerate(44100)
 
     print(f"Recording started for {client_id}")
 
@@ -43,6 +75,20 @@ def start_recording(client_id):
         if not mute_status[client_id]:
             data = stream.read(1024)
             output_wave.writeframes(data)
+            data2 = stream2.read(1024)
+            output_wave2.writeframes(data2)
+
+    # Combine 2 streams
+    sound1 = AudioSegment.from_file(file1)
+    sound2 = AudioSegment.from_file(file2)
+    combined = sound1.overlay(sound2)
+    combined.export(f"combined_recording_{client_id}_{
+                    datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.wav", format='wav')
+
+    output_wave.close()
+    output_wave2.close()
+    os.remove(file1)
+    os.remove(file2)
 
 
 def stop_recording(client_id):
@@ -101,7 +147,8 @@ async def handle_client(websocket, path):
                 await websocket.send(json.dumps(fetch_recordings()))
             elif data['action'] == 'send_recording':
                 print("Received audio stream from client: ", client_id)
-                print("Audio data: ", data['payload'])  # Print out the received audio data
+                # Print out the received audio data
+                print("Audio data: ", data['payload'])
             elif data['action'] == 'fetch_recording':
                 file_name = data['payload']
                 try:
