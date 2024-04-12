@@ -32,7 +32,7 @@ print(default_speakers)
 stream = p.open(
     format=pyaudio.paInt16,
     channels=default_speakers["maxInputChannels"],
-    rate=44100,
+    rate=int(default_speakers["defaultSampleRate"]),
     frames_per_buffer=1024,
     input=True,
     input_device_index=default_speakers["index"]
@@ -56,14 +56,12 @@ def start_recording(client_id):
     global recordings, output_wave
     recordings[client_id] = True
 
-    file1 = f"recording1_{client_id}_{
-        datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.wav"
+    file1 = f"recording1_{client_id}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.wav"
     output_wave = wave.open(file1, "wb")
     output_wave.setnchannels(2)
     output_wave.setsampwidth(pyaudio.get_sample_size(pyaudio.paInt16))
     output_wave.setframerate(44100)
-    file2 = f"recording2_{client_id}_{
-        datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.wav"
+    file2 = f"recording2_{client_id}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.wav"
     output_wave2 = wave.open(file2, "wb")
     output_wave2.setnchannels(2)
     output_wave2.setsampwidth(pyaudio.get_sample_size(pyaudio.paInt16))
@@ -82,8 +80,7 @@ def start_recording(client_id):
     sound1 = AudioSegment.from_file(file1)
     sound2 = AudioSegment.from_file(file2)
     combined = sound1.overlay(sound2)
-    combined.export(f"combined_recording_{client_id}_{
-                    datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.wav", format='wav')
+    combined.export(f"combined_recording_{client_id}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.wav", format='wav')
 
     output_wave.close()
     output_wave2.close()
