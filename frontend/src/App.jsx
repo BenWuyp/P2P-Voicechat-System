@@ -5,12 +5,16 @@ import Login from "./Login";
 import Dashboard from "./Dashboard";
 import Chatroom from "./Chatroom";
 
-const WS_URL = "ws://125.59.219.35:8765";
+const WS_URL = "ws://127.0.0.1:8765";
 
 function App() {
   const { sendMessage, lastMessage, readyState } = useWebSocket(WS_URL, {
     onOpen: () => {
       console.log("WebSocket connection established.");
+    },
+    onClose: () => {
+      const jsonStr = JSON.stringify({ action: "terminate_chat_client" });
+      sendMessage(jsonStr);
     },
   });
 
@@ -49,6 +53,16 @@ function App() {
       payload: `${chatroom.name}`,
     });
     sendMessage(jsonStr);
+
+    const jsonStr2 = JSON.stringify({
+      action: "terminate_chat_client",
+    });
+    sendMessage(jsonStr2);
+
+    const jsonStr3 = JSON.stringify({
+      action: "terminate_chat_server",
+    });
+    sendMessage(jsonStr3);
 
     setChatroom(null);
     setRecorderName("None");

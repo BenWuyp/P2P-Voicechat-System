@@ -10,44 +10,17 @@ const Chatroom = ({
 }) => {
   const [isMuted, setIsMuted] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
-  const [RecorderName, setRecorderName] = useState(false);
   const [enableCam, setEnableCam] = useState(false);
   const [enableVoiceChange, setEnableVoiceChange] = useState(false);
   const [recordedTime, setRecordedTime] = useState("00:00");
   const [recordingList, setRecordingList] = useState([]);
   const [selectedRecording, setSelectedRecording] = useState("");
+  const [inputMessage, setInputMessage] = useState("");
+  const [messages, setMessages] = useState([]);
+  const [messageError, setMessageError] = useState("");
+  const [users, setUsers] = useState([]);
+  const [userCount, setUserCount] = useState(0);
 
-  let audioContext;
-  let sourceNode;
-  let websocket;
-  let mediaRecorder;
-  let chunks = [];
-
-  useEffect(() => {
-    const serverIp = "125.59.219.35"; // Replace with your server IP
-    const serverPort = "8765"; // Replace with your server port if different
-    websocket = new WebSocket(`ws://${serverIp}:${serverPort}`);
-
-    websocket.onopen = async () => {
-      console.log("Connected to the server");
-    };
-
-    websocket.onmessage = (event) => {
-      // Handle messages from the server
-    };
-
-    websocket.onclose = () => {
-      console.log("Disconnected from the server");
-    };
-
-    websocket.onerror = (error) => {
-      console.error(`WebSocket error: ${error}`);
-    };
-
-    return () => {
-      websocket.close();
-    };
-  }, []);
   useEffect(() => {
     let intervalId;
 
@@ -70,9 +43,11 @@ const Chatroom = ({
   }, [isRecording]);
 
   useEffect(() => {
+    // Fetch recordings
     if (lastMessage.data[0] !== "{" && lastMessage.data[0] === "[") {
       setRecordingList(JSON.parse(lastMessage.data));
     }
+    // Play recording
     if (lastMessage.data[0] !== "{" && lastMessage.data[0] !== "[") {
       const binaryData = Uint8Array.from(atob(lastMessage.data), (c) =>
         c.charCodeAt(0)
@@ -84,30 +59,55 @@ const Chatroom = ({
       const audio = new Audio(audioUrl);
       audio.play();
     }
+    if (lastMessage.data[0] === "{") {
+      try {
+        // Chatroom info
+        const obj = JSON.parse(lastMessage.data);
+        if (obj?.[chatroomName]) {
+          setUsers(obj[chatroomName]["members"]);
+          setUserCount(obj[chatroomName]["members"].length);
+        }
+        // Text info
+        if (obj?.["textRecords"]) {
+          const receivedMessages = obj["textRecords"].map(
+            ([sender, content]) => ({
+              sender,
+              content,
+            })
+          );
+          setMessages(receivedMessages);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    }
   }, [lastMessage]);
 
   useEffect(() => {
-    if (websocket && websocket.readyState === WebSocket.OPEN) {
-      if (isMuted) {
-        const jsonStr = JSON.stringify({ action: "mute", payload: true });
-        websocket.send(jsonStr);
+    if (isMuted) {
+      const jsonStr = JSON.stringify({ action: "mute", payload: true });
+      sendMessage(jsonStr);
+      const jsonStr2 = JSON.stringify({ action: "terminate_chat_client" });
+      sendMessage(jsonStr2);
 
-        console.log("stop");
- 
-      } else {
-        const jsonStr = JSON.stringify({ action: "mute", payload: false });
-        websocket.send(jsonStr);
-
-        console.log("start");
-
-      }
+      console.log("stop");
+    } else {
+      const jsonStr = JSON.stringify({ action: "mute", payload: false });
+      sendMessage(jsonStr);
+      const jsonStr2 = JSON.stringify({ action: "run_chat_client" });
+      sendMessage(jsonStr2);
+      console.log("start");
     }
-  }, [isMuted, websocket]);
+  }, [isMuted]);
 
   useEffect(() => {
     const interval = setInterval(() => {
+      sendMessage(JSON.stringify({ action: "list", payload: undefined }));
       sendMessage(
         JSON.stringify({ action: "fetch_recordings", payload: undefined })
+      );
+      sendMessage(
+        JSON.stringify({ action: "list_text", payload: chatroomName })
       );
     }, 1000);
 
@@ -115,7 +115,6 @@ const Chatroom = ({
       clearInterval(interval);
     };
   }, []);
-
 
   const handleRecord = () => {
     setRecorderName(username);
@@ -127,28 +126,6 @@ const Chatroom = ({
       );
     }
     setIsRecording(!isRecording);
-
-    // // Create an audio context
-    // let audioContext = new AudioContext();
-
-    // await audioContext.audioWorklet.addModule("processor.js");
-
-    // // Create an instance of the audio worklet node
-    // const workletNode = new AudioWorkletNode(
-    //   audioContext,
-    //   "audio-worklet-processor"
-    // );
-
-    // // Connect the worklet node to the destination (the speakers)
-    // workletNode.connect(audioContext.destination);
-
-    // // Create a media stream source from the user media stream
-    // const sourceNode = audioContext.createMediaStreamSource(stream);
-
-    // // Connect the source node to the worklet node
-    // sourceNode.connect(workletNode);
-
-    // workletNode.port.postMessage({ action: "start" });
   };
 
   const handleVideo = () => {
@@ -170,6 +147,29 @@ const Chatroom = ({
     );
   };
 
+  const handleSendMessage = (event) => {
+    event.preventDefault();
+    if (inputMessage.trim() !== "") {
+      // Send message to the chatroom
+      sendMessage(
+        JSON.stringify({
+          action: "store_text",
+          payload: {
+            chatroom: chatroomName,
+            username: username,
+            message: inputMessage,
+          },
+        })
+      );
+
+      // Clear the input field
+      setInputMessage("");
+      setMessageError("");
+    } else {
+      setMessageError("Message cannot be empty");
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       <div className="w-64 bg-indigo-600 w-80 space-y-6 py-7 px-2 absolute inset-y-0 left-0 transform -translate-x-full md:translate-x-0 md:inset-0 transition-transform duration-200 ease-in-out bg-indigo-600 text-white p-4">
@@ -179,12 +179,14 @@ const Chatroom = ({
         <hr></hr>
         <h2 className="text-xl mb-4">Chatroom: {chatroomName}</h2>
         <h2 className="text-xl mb-4">Chatroom Id: {chatroomID}</h2>
-        <h2 className="text-xl mb-4">{chatroomID} Participants</h2>
+        <h2 className="text-xl mb-4">{userCount} Participants</h2>
         <hr></hr>
         <ul>
-          <li className="mb-2">participant 1</li>
-          <li className="mb-2">participant 2</li>
-          <li className="mb-2">participant 3</li>
+          {users.map((user, index) => (
+            <li key={index} className="mb-2">
+              {user}
+            </li>
+          ))}
         </ul>
         <hr></hr>
         <p>
@@ -262,16 +264,41 @@ const Chatroom = ({
       </div>
       <div className="flex-grow p-4">
         {/* Your chatroom content goes here */}
-        <table className="w-screen h-screen">
-          <tr>
-            <th className="border-4 border-green-500 ">User1</th>
-            <th className="border-4 border-green-500">User2</th>
-          </tr>
-          <tr>
-            <td className="border-4 border-green-500">User4</td>
-            <td className="border-4 border-green-500">User99</td>
-          </tr>
-        </table>
+        <div className="p-4 bg-indigo-600 text-white">
+          <h2 className="text-xl font-bold">{chatroomName}</h2>
+          <p className="text-sm">{userCount} Participants</p>
+        </div>
+
+        {/* Chat messages */}
+        <div className="flex-grow p-4 overflow-y-auto">
+          {messages.map((msg, index) => (
+            <div key={index} className="mb-2">
+              <span className="font-bold">{msg.sender}: </span>
+              <span>{msg.content}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Chat input */}
+        <form className="p-4 border-t">
+          <input
+            type="text"
+            value={inputMessage}
+            onChange={(e) => setInputMessage(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-indigo-600"
+            placeholder="Type your message..."
+          />
+          <button
+            type="submit"
+            onClick={handleSendMessage}
+            className="mt-2 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700"
+          >
+            Send
+          </button>
+          {messageError && (
+            <p className="text-red-500 text-sm mt-1">{messageError}</p>
+          )}
+        </form>
       </div>
     </div>
   );
