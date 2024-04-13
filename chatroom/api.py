@@ -9,11 +9,15 @@ import glob
 import base64
 from pydub import AudioSegment
 import os
+import subprocess
 
 text = {}
 chatrooms = {}
 ws = {}
 mute_status = {}
+
+server_process = None
+client_process = None
 
 recording = False
 output_wave = None
@@ -103,6 +107,56 @@ def fetch_recordings():
     return wav_files
 
 
+def run_server():
+    global server_process
+    try:
+        if server_process is not None and server_process.poll() is None:
+            return 'A Python script is already running.'
+
+        server_process = subprocess.Popen(['python', 'voicechatserver.py'])
+        return 'Python script started.'
+    except Exception as e:
+        return f'An error occurred while starting the Python script: {str(e)}'
+
+
+def terminate_server():
+    global server_process
+    try:
+        if server_process is not None and server_process.poll() is None:
+            server_process.terminate()
+            server_process = None
+            return 'Python script interrupted.'
+        else:
+            return 'No running Python script to interrupt.'
+    except Exception as e:
+        return f'An error occurred while interrupting the Python script: {str(e)}'
+
+
+def run_client():
+    global client_process
+    try:
+        if client_process is not None and client_process.poll() is None:
+            return 'A Python script is already running.'
+
+        client_process = subprocess.Popen(['python', 'voicechatclient.py'])
+        return 'Python script started.'
+    except Exception as e:
+        return f'An error occurred while starting the Python script: {str(e)}'
+
+
+def terminate_client():
+    global client_process
+    try:
+        if client_process is not None and client_process.poll() is None:
+            client_process.terminate()
+            client_process = None
+            return 'Python script interrupted.'
+        else:
+            return 'No running Python script to interrupt.'
+    except Exception as e:
+        return f'An error occurred while interrupting the Python script: {str(e)}'
+
+
 async def handle_client(websocket, path):
     client_id = None
     try:
@@ -171,6 +225,14 @@ async def handle_client(websocket, path):
                 lst = text[chatroom]
                 json_str = json.dumps({'textRecords': lst})
                 await websocket.send(json_str)
+            elif data['action'] == 'run_chat_client':
+                run_client()
+            elif data['action'] == 'terminate_chat_client':
+                terminate_client()
+            elif data['action'] == 'run_chat_server':
+                run_server()
+            elif data['action'] == 'terminate_chat_server':
+                terminate_server()
     finally:
         if client_id in ws:
             del ws[client_id]

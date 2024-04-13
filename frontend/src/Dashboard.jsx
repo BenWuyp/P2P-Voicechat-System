@@ -40,6 +40,8 @@ const Dashboard = ({
 
     sendMessage(jsonStr);
     const chatroom = { name: props.chatroomName, number: 1 };
+    const jsonStr2 = JSON.stringify({'action':'run_chat_server'})
+    sendMessage(jsonStr2)
     onJoin(chatroom);
   };
 
