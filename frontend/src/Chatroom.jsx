@@ -20,6 +20,7 @@ const Chatroom = ({
   const [messageError, setMessageError] = useState("");
   const [users, setUsers] = useState([]);
   const [userCount, setUserCount] = useState(0);
+  const [RecorderName, setRecorderName] = useState(false);
 
   useEffect(() => {
     let intervalId;
