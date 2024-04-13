@@ -1,15 +1,23 @@
 # P2P-Voicechat-System
-CSCI3280 project phase I
-<img width="812" alt="image" src="https://github.com/EHChan52/P2P-Voicechat-System/assets/126001690/90ce2e7f-1af8-42f1-880c-f769cef93263">
+CSCI3280 project phase II
 
-on the top there is menu that allows import files, audio trimming and overwrite, show user guide
-GUI: Left is audio list and with import more wav for editing
-Right is a graph that can show sound wave diagram
-below shows the name of the audio currently playing
-a timer in form mm:ss/mm:ss that shows the current time in audio and total audio length then a slider that can choose time interval of audio
-different buttons that record play pause stop fast forward and backward volume slider from 0 to 100
-<img width="181" alt="image" src="https://github.com/EHChan52/P2P-Voicechat-System/assets/126001690/a2839bf8-59bc-44e7-bc95-ee126d946840">
-a time show how long has recorded
-buttons to start and stop the recording
+![image](https://github.com/EHChan52/P2P-Voicechat-System/assets/126001690/276cf9bd-da4b-48b5-af7b-6c8bd7153502)
+This is the frontpage of the application, user should input a username to identify themselvesIf nothing is inputted, the user will be given a default name"Guest"
 
-Phase 2
+![image](https://github.com/EHChan52/P2P-Voicechat-System/assets/126001690/0bac85d2-0777-4c84-9f62-05cdaa60e29e)
+This is the Main page of the application, user can carry out different actions:
+1.Reload Main page
+2.Create Chatroom by Chatroom Name
+3.Join Chatroom
+4.Search Chatrooms by Chatroom Names
+5.Logout to the mainscreen
+
+![image](https://github.com/EHChan52/P2P-Voicechat-System/assets/126001690/b7e93fde-e0aa-4d96-af33-f99fc2719178)
+This is the Maon page of the application, user can carry out different actions:
+1.Mute/Unmute Button
+2.Start/Stop Record Button
+3.Chatroom Recording ListBox
+4.Chatroom Recording Play Button
+5.Text Chat Chatbox and Send Button
+6.Quit Chatroom button
+
