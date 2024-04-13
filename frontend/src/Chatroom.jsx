@@ -10,8 +10,6 @@ const Chatroom = ({
 }) => {
   const [isMuted, setIsMuted] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
-  const [enableCam, setEnableCam] = useState(false);
-  const [enableVoiceChange, setEnableVoiceChange] = useState(false);
   const [recordedTime, setRecordedTime] = useState("00:00");
   const [recordingList, setRecordingList] = useState([]);
   const [selectedRecording, setSelectedRecording] = useState("");
@@ -129,14 +127,6 @@ const Chatroom = ({
     setIsRecording(!isRecording);
   };
 
-  const handleVideo = () => {
-    setEnableCam(!enableCam);
-  };
-
-  const handleVoiceChange = () => {
-    setEnableVoiceChange(!enableVoiceChange);
-  };
-
   const handleRecordingSelect = (event) => {
     setSelectedRecording(event.target.value);
   };
@@ -240,18 +230,6 @@ const Chatroom = ({
           </button>
         </p>
         <hr></hr>
-        <button
-          onClick={handleVideo}
-          className="border border-white border-3 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700"
-        >
-          {enableCam ? "Disable Camera" : "Enable Camera"}
-        </button>
-        <button
-          onClick={handleVoiceChange}
-          className="border border-white border-3 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700"
-        >
-          {enableVoiceChange ? "Disable Voice Change" : "Enable Voice Change"}
-        </button>
         <hr></hr>
         <p>
           <button
