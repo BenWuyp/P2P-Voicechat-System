@@ -10,6 +10,7 @@ import base64
 from pydub import AudioSegment
 import os
 
+text = {}
 chatrooms = {}
 ws = {}
 mute_status = {}
@@ -56,12 +57,14 @@ def start_recording(client_id):
     global recordings, output_wave
     recordings[client_id] = True
 
-    file1 = f"recording1_{client_id}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.wav"
+    file1 = f"recording1_{client_id}_{
+        datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.wav"
     output_wave = wave.open(file1, "wb")
     output_wave.setnchannels(2)
     output_wave.setsampwidth(pyaudio.get_sample_size(pyaudio.paInt16))
     output_wave.setframerate(44100)
-    file2 = f"recording2_{client_id}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.wav"
+    file2 = f"recording2_{client_id}_{
+        datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.wav"
     output_wave2 = wave.open(file2, "wb")
     output_wave2.setnchannels(2)
     output_wave2.setsampwidth(pyaudio.get_sample_size(pyaudio.paInt16))
@@ -80,7 +83,8 @@ def start_recording(client_id):
     sound1 = AudioSegment.from_file(file1)
     sound2 = AudioSegment.from_file(file2)
     combined = sound1.overlay(sound2)
-    combined.export(f"combined_recording_{client_id}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.wav", format='wav')
+    combined.export(f"combined_recording_{client_id}_{
+                    datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.wav", format='wav')
 
     output_wave.close()
     output_wave2.close()
@@ -118,6 +122,8 @@ async def handle_client(websocket, path):
                 chatroom = data['payload']
                 chatrooms[chatroom] = {
                     'createdBy': client_id, 'members': [client_id]}
+
+                text[chatroom] = []
             elif data['action'] == 'join':
                 chatroom = data['payload']
                 if chatroom in chatrooms:
@@ -156,6 +162,15 @@ async def handle_client(websocket, path):
                         await websocket.send(audio_str)
                 except FileNotFoundError:
                     await websocket.send('File not found')
+            elif data['action'] == 'store_text':
+                payload = data['payload']
+                chatroom, username, message = payload['chatroom'], payload['username'], payload['message']
+                text[chatroom].append((username, message))
+            elif data['action'] == 'list_text':
+                chatroom = data['payload']
+                lst = text[chatroom]
+                json_str = json.dumps({'textRecords': lst})
+                await websocket.send(json_str)
     finally:
         if client_id in ws:
             del ws[client_id]
@@ -171,6 +186,7 @@ async def handle_client(websocket, path):
                 empty_room = chatroom
         if (empty_room):
             del chatrooms[empty_room]
+            del text[empty_room]
 
 
 start_server = websockets.serve(handle_client, '0.0.0.0', 8765)
