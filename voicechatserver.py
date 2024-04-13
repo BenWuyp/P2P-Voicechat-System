@@ -1,59 +1,77 @@
+import asyncio
 import socket
 import pyaudio
-import threading
+from threading import Thread
 
 # Create a new socket
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.bind(('0.0.0.0', 8766))
-s.listen(1)
+s.listen(5)
 
 print("Server is listening...")
 
-def handle_client(client):
-    # Set up PyAudio
-    p = pyaudio.PyAudio()
-    stream = p.open(format=pyaudio.paInt16, channels=1, rate=44100, input=True, output=True, frames_per_buffer=1024)
+# List to store connected clients
+clients = []
 
+# Set up PyAudio
+p = pyaudio.PyAudio()
+device_info = p.get_device_info_by_host_api_device_index(0, 0)
+
+stream = p.open(format=pyaudio.paInt16, 
+                channels=2, 
+                rate=44100, 
+                input=True, 
+                output=True, 
+                frames_per_buffer=1024, 
+                input_device_index=device_info['index'])
+
+def handle_client(client):
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
     # Function to handle receiving data from the client
-    def receive_data():
+    async def receive_data():
         while True:
             try:
-                data = client.recv(1024)
+                data = await loop.sock_recv(client, 1024)
                 if not data:
                     break
-                stream.write(data)
-            except:
+                # Broadcast the received data to all connected clients
+                clients_copy = clients.copy()
+                clients_copy.remove(client)
+                for c in clients_copy:
+                    await loop.sock_sendall(c, data)
+            except ConnectionResetError:
+                if client in clients:
+                    clients.remove(client)
                 break
 
-    # Start a new thread for receiving data from the client
-    receive_thread = threading.Thread(target=receive_data)
-    receive_thread.start()
-
-    print("Server is sending and receiving audio...")
-
-    try:
+    # Function to handle sending data to the client
+    async def send_data():
         while True:
             try:
                 if not stream.is_stopped():
-                    data = stream.read(1024)
-                    client.sendall(data)
-                else:
-                    break
-            except (ConnectionAbortedError, ConnectionResetError):
-                print("Connection was closed by the client.")
+                    data = stream.read(1024, exception_on_overflow=False)
+                    # Broadcast the audio data to all connected clients
+                    clients_copy = clients.copy()
+                    clients_copy.remove(client)
+                    for c in clients_copy:
+                        await loop.sock_sendall(c, data)
+            except ConnectionResetError:
+                if client in clients:
+                    clients.remove(client)
                 break
-    except KeyboardInterrupt:
-        print("Stopped recording.")
 
-    # Clean up
-    stream.stop_stream()
-    stream.close()
-    p.terminate()
-    client.close()
+    # Start concurrent tasks for receiving and sending data
+    receive_task = loop.create_task(receive_data())
+    send_task = loop.create_task(send_data())
+    loop.run_until_complete(asyncio.wait([receive_task, send_task]))
 
-while True:
-    # Accept a connection from the client
-    client, address = s.accept()
-    print(f"Connected with {str(address)}")
-    client_handler = threading.Thread(target=handle_client, args=(client,))
-    client_handler.start()
+def main():
+    while True:
+        client, address = s.accept()
+        print(f"Connected with {str(address)}")
+        clients.append(client)  # Add the client to the list of connected clients
+        Thread(target=handle_client, args=(client,)).start()  # Handle the client in a separate thread
+
+# Run the server
+main()
