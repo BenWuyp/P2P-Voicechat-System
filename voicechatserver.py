@@ -36,10 +36,9 @@ def handle_client(client):
                 if not data:
                     break
                 # Broadcast the received data to all connected clients
-                clients_copy = clients.copy()
-                clients_copy.remove(client)
-                for c in clients_copy:
-                    await loop.sock_sendall(c, data)
+                for c in clients:
+                    if c != client:
+                        await loop.sock_sendall(c, data)
             except ConnectionResetError:
                 if client in clients:
                     clients.remove(client)
@@ -52,10 +51,9 @@ def handle_client(client):
                 if not stream.is_stopped():
                     data = stream.read(1024, exception_on_overflow=False)
                     # Broadcast the audio data to all connected clients
-                    clients_copy = clients.copy()
-                    clients_copy.remove(client)
-                    for c in clients_copy:
-                        await loop.sock_sendall(c, data)
+                    for c in clients:
+                        if c != client:
+                            await loop.sock_sendall(c, data)
             except ConnectionResetError:
                 if client in clients:
                     clients.remove(client)
